@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>HTProxy</comment>
+
+<entry key="htmlFilter.layers">
+Tên liên hệ
+ContactName932
+</entry>
+
+<entry key="urlFilter.blocked.message.data">filter/URLFilterMsg.data</entry>
+
+<entry key="cache.duration.filters.url">
+.*/(\?.*)? 1h
+.*/servlet/.* 1h
+.*\.(s?html?|txt)(\?.*)? 1h
+</entry>
+
+<entry key="cache.duration.default">24h</entry>
+
+<entry key="urlFilter.layers">
+.*\.us
+.*casino.*
+ftp://.*
+.*://.*:13.*
+.*/servlet/.*
+#.*\.php?.*
+</entry>
+
+<entry key="cache.memory.max">60000</entry>
+<entry key="cache.list">/tmp/cache/HTProxy.cache.list</entry>
+<entry key="cache.storage.max">6000000</entry>
+<entry key="connection.max">60</entry>
+<entry key="cache.storage.directory">/tmp/cache/HTProxy</entry>
+<entry key="listenning.port">1306</entry>
+<entry key="proxy.port">6</entry>
+<entry key="htmlFilter.blocked.message.data">filter/HTMLFilterMsg.data</entry>
+
+<entry key="cache.duration.filters.contentType">
+image/.* 24h
+text/.* 1h
+</entry>
+
+</properties>
