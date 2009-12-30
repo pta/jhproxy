@@ -26,7 +26,7 @@ public final class HTTPRequest
 
 	private Date				ifModifiedSince;
 
-	private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
+	private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat ("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
 
 	public void parse (InputStream in) throws IOException, SocketException
 	{
