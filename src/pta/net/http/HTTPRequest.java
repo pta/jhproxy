@@ -21,6 +21,7 @@ public final class HTTPRequest
 	private URL					url;
 
 	private boolean				isNoCached;
+	private boolean				isKeepAlive;
 	private Date				ifModifiedSince				= new Date (0);
 	private SimpleDateFormat	ifModifiedSinceDateFormat	= new SimpleDateFormat (
 																	"EEEEEEEE, dd-MMM-yyyy HH:mm:ss 'GMT'");
@@ -90,6 +91,10 @@ public final class HTTPRequest
 						// HTTP/1.0: Pragma: no-cache
 						// HTTP/1.1: Cache-Control: no-cache
 						this.isNoCached = true;
+					}
+					else if (str.equals ("Proxy-Connection: keep-alive"))
+					{
+						this.isKeepAlive = true;
 					}
 					else if (str.startsWith ("If-Modified-Since: "))
 					{
@@ -297,13 +302,7 @@ public final class HTTPRequest
 		}
 	}
 
-	public URL getURL()
-	{
-		return url;
-	}
-
-	public boolean isNoCache()
-	{
-		return isNoCached;
-	}
+	public URL getURL() {return url;}
+	public boolean isNoCache() {return isNoCached;}
+	public boolean isKeepAlive () {return isKeepAlive;}
 }
