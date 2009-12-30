@@ -22,24 +22,10 @@ public final class HTTPRequest
 
 	private boolean				isNoCached;
 	private boolean				isKeepAlive;
-	private Date				ifModifiedSince				= new Date (0);
-	private SimpleDateFormat	ifModifiedSinceDateFormat	= new SimpleDateFormat (
-																	"EEEEEEEE, dd-MMM-yyyy HH:mm:ss 'GMT'");
-	private int					ifModifiedSinceOffset;
-	private int					ifModifiedSinceLength;
-	private boolean				isAsctimeDate;
 
-	private boolean				isInterrupted				= false;
+	private Date				ifModifiedSince;
 
-	public void interrupt()
-	{
-		isInterrupted = true;
-	}
-
-	public boolean isInterrupted()
-	{
-		return isInterrupted;
-	}
+	private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
 
 	public void parse (InputStream in) throws IOException, SocketException
 	{
@@ -51,7 +37,7 @@ public final class HTTPRequest
 		int length = 0;
 		int size;
 
-		while (!isInterrupted && ((inInt = in.read()) != -1))
+		while ((inInt = in.read()) != -1)
 		{
 
 			b = (byte) inInt;
@@ -68,7 +54,9 @@ public final class HTTPRequest
 					{
 						break;
 					}
+
 					String str = line.toString().trim();
+
 					if (lineCnt == 0)
 					{
 						// GET http://host/link.ext?key=value HTTP/1.0
@@ -82,74 +70,40 @@ public final class HTTPRequest
 						if (this.port == -1) this.port = 80;
 						this.httpVersion = parts[2];
 					}
+					else if (str.equals ("Proxy-Connection: keep-alive"))
+					{
+						this.isKeepAlive = true;
+					}
 					if (str.startsWith ("Content-Length: "))
 					{
 						length = Integer.parseInt (str.substring (16));
 					}
-					else if (str.contains (": no-cache"))
+					else if (str.startsWith ("If-Modified-Since: "))
+					{
+						String strDate = str.substring (19);
+
+						try
+						{
+							ifModifiedSince = simpleDateFormat.parse (strDate);
+							/*System.out.println(strDate);
+							System.out.println(ifModifiedSince);/**/
+						}
+						catch (ParseException pe)
+						{
+							pe.printStackTrace();
+							System.exit (0);
+						}
+					}
+					else if (str.contains ("no-cache"))
 					{
 						// HTTP/1.0: Pragma: no-cache
 						// HTTP/1.1: Cache-Control: no-cache
 						this.isNoCached = true;
 					}
-					else if (str.equals ("Proxy-Connection: keep-alive"))
-					{
-						this.isKeepAlive = true;
-					}
-					else if (str.startsWith ("If-Modified-Since: "))
-					{
-						String strDate = str.substring (19);
-						ifModifiedSinceLength = strDate.length();
-						ifModifiedSinceOffset = data.size()
-								- ifModifiedSinceLength - 1;
-						if (strDate.endsWith ("GMT"))
-						{
-							if (0 <= strDate.indexOf ('-'))
-							{ // Monday, 06-Jun-1984 23:59:59 GMT
-								ifModifiedSinceDateFormat = new SimpleDateFormat (
-										"EEEEEEEE, dd-MMM-yyyy HH:mm:ss 'GMT'");
-							}
-							else
-							{ // Mon, 06 Jun 1984 23:59:59 GMT
-								ifModifiedSinceDateFormat = new SimpleDateFormat (
-										"EEE, dd MMM yyyy HH:mm:ss 'GMT'");
-							}
-						}
-						else
-						{ // asctime-strDate
-							isAsctimeDate = true;
-							if (strDate.charAt (8) == ' ')
-							{ // Mon Jun 6 23:59:59 1984
-								ifModifiedSinceDateFormat = new SimpleDateFormat (
-										"EEE MMM  d HH:mm:ss yyyy");
-							}
-							else
-							{ // Mon Jun 13 23:59:59 1984
-								ifModifiedSinceDateFormat = new SimpleDateFormat (
-										"EEE MMM dd HH:mm:ss yyyy");
-							}
-						}
-						ifModifiedSinceDateFormat
-								.setTimeZone (new SimpleTimeZone (0, "GMT"));
-						try
-						{
-							ifModifiedSince = ifModifiedSinceDateFormat
-									.parse (strDate);
-							/*
-							 * System.out.println(strDate);
-							 * System.out.println(ifModifiedSince);/*
-							 */
-						}
-						catch (ParseException pe)
-						{
-							System.out.println (ifModifiedSinceDateFormat
-									.toPattern());
-							pe.printStackTrace();
-							System.exit (0);
-						}
-					}
+
 					lineCnt++;
 				}
+
 				line.setLength (0);
 			}
 			else if (b == '\n')
@@ -161,19 +115,24 @@ public final class HTTPRequest
 					if (length == 0)
 					{
 						this.request = new byte[size];
+
 						for (int i = 0; i < size; i++)
 						{
-							this.request[i] = ((Byte) data.get (i))
-									.byteValue();
+							this.request[i] = ((Byte) data.get(i)).byteValue();
 						}
-						break;
 					}
-					this.request = new byte[length + size];
-					for (int i = 0; i < size; i++)
+					else
 					{
-						this.request[i] = ((Byte) data.get (i)).byteValue();
+						this.request = new byte[length + size];
+
+						for (int i = 0; i < size; i++)
+						{
+							this.request[i] = ((Byte) data.get(i)).byteValue();
+						}
+
+						in.read (this.request, size, length);
 					}
-					in.read (this.request, size, length);
+
 					break;
 				}
 			}
@@ -240,66 +199,6 @@ public final class HTTPRequest
 	public Date getIfModifiedSince()
 	{
 		return ifModifiedSince;
-	}
-
-	public void setIfModifiedSince (Date newDate)
-	{
-		if (ifModifiedSince == null || ifModifiedSinceOffset == 0) return;
-		Calendar newCal = new GregorianCalendar();
-		newCal.setTime (newDate);
-		Calendar oldCal = new GregorianCalendar();
-		oldCal.setTime (ifModifiedSince);
-		SimpleDateFormat dateFormat = ifModifiedSinceDateFormat;
-		if (isAsctimeDate)
-		{
-			if (newCal.get (Calendar.DAY_OF_MONTH) < 10)
-			{ // EEE MMM d HH:mm:ss yyyy
-				if (10 <= oldCal.get (Calendar.DAY_OF_MONTH))
-				{
-					dateFormat = new SimpleDateFormat (
-							"EEE MMM  d HH:mm:ss yyyy");
-				}
-			}
-			else
-			{ // EEE MMM dd HH:mm:ss yyyy
-				if (oldCal.get (Calendar.DAY_OF_MONTH) < 10)
-				{
-					dateFormat = new SimpleDateFormat (
-							"EEE MMM dd HH:mm:ss yyyy");
-				}
-			}
-		}
-		dateFormat.setTimeZone (new SimpleTimeZone (0, "GMT"));
-		String strDate = dateFormat.format (newDate);
-		try
-		{
-			byte[] strData = strDate.getBytes ("ISO-8859-1");
-			if (strData.length == ifModifiedSinceLength)
-			{
-				System.arraycopy (strData, 0, request, ifModifiedSinceOffset,
-						ifModifiedSinceLength);
-			}
-			else
-			{
-				byte[] old = request;
-				request = new byte[request.length + strData.length
-						- ifModifiedSinceLength];
-				System.arraycopy (old, 0, request, 0, ifModifiedSinceOffset);
-				System.arraycopy (strData, 0, request, ifModifiedSinceOffset,
-						strData.length);
-				System.arraycopy (old, ifModifiedSinceOffset
-						+ ifModifiedSinceLength, request, ifModifiedSinceOffset
-						+ strData.length, request.length
-						- ifModifiedSinceOffset - strData.length);/**/
-				ifModifiedSinceLength = strData.length;
-			}
-			ifModifiedSince = newDate;
-		}
-		catch (UnsupportedEncodingException uee)
-		{
-			uee.printStackTrace();
-			System.exit (0);
-		}
 	}
 
 	public URL getURL() {return url;}
