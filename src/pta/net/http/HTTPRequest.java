@@ -8,6 +8,7 @@ import java.io.*;
 import java.util.*;
 import java.net.*;
 import java.text.*;
+import pta.util.*;
 
 public final class HTTPRequest
 {
@@ -29,28 +30,25 @@ public final class HTTPRequest
 
 	public void parse (InputStream in) throws IOException, SocketException
 	{
+		FreeByteArrayOutputStream data = new FreeByteArrayOutputStream (1400);
 		StringBuffer line = new StringBuffer (128);
-		ArrayList<Byte> data = new ArrayList<Byte> (256);
+
 		int inInt;
-		byte b = -1;
 		int lineCnt = 0;
 		int length = 0;
-		int size;
 
 		while ((inInt = in.read()) != -1)
 		{
-
-			b = (byte) inInt;
+			byte b = (byte) inInt;
 			line.append ((char) b);
-			data.add (new Byte (b));
-			size = data.size();
+			data.write (b);
 
 			if (b == '\r')
 			{
-				if (size > 1)
+				if (data.size() > 1)
 				{
 					// "\r\r" then must be the end
-					if (((Byte) data.get (size - 2)).byteValue() == '\r')
+					if (data.get(-2) == '\r')
 					{
 						break;
 					}
@@ -101,34 +99,29 @@ public final class HTTPRequest
 						this.isNoCached = true;
 					}
 
-					lineCnt++;
+					++lineCnt;
 				}
 
 				line.setLength (0);
 			}
 			else if (b == '\n')
 			{
-				if ((((Byte) data.get (size - 4)).byteValue() == '\r')
-						&& (((Byte) data.get (size - 3)).byteValue() == '\n')
-						&& (((Byte) data.get (size - 2)).byteValue() == '\r'))
+				if ((data.get(-4) == '\r')
+						&& (data.get(-3) == '\n')
+						&& (data.get(-2) == '\r'))
 				{
 					if (length == 0)
 					{
-						this.request = new byte[size];
-
-						for (int i = 0; i < size; i++)
-						{
-							this.request[i] = ((Byte) data.get(i)).byteValue();
-						}
+						this.request = data.getByteArray();
 					}
 					else
 					{
-						this.request = new byte[length + size];
+						int size = data.size();
 
-						for (int i = 0; i < size; i++)
-						{
-							this.request[i] = ((Byte) data.get(i)).byteValue();
-						}
+						this.request = new byte[length + size];
+						
+						System.arraycopy (data.getByteArray(), 0,
+								this.request, 0, size);
 
 						in.read (this.request, size, length);
 					}
