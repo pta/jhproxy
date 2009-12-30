@@ -101,7 +101,7 @@ public final class DataProperties extends Properties
 	 */
 	public String[] getStringArray (String key, String delimExp)
 	{
-		String all = getString (key).trim();
+		String all = getProperty(key).trim();
 		if (all == null) return null;
 		if (delimExp == null || delimExp.length() == 0)
 			return all.split ("\\s");
@@ -131,22 +131,6 @@ public final class DataProperties extends Properties
 	}
 
 	/**
-	 * an alias of {@link #getProperty(String)}
-	 */
-	public String getString (String key)
-	{
-		return getProperty (key);
-	}
-
-	/**
-	 * an alias of {@link #setProperty(String,String)}
-	 */
-	public void setString (String key, String value)
-	{
-		setProperty (key, value);
-	}
-
-	/**
 	 * get the time distance measured in milliseconds in the following format:
 	 * key : [<hours>h][<minutes>'][<seconds>"][<miliseconds>]
 	 * 
@@ -155,7 +139,7 @@ public final class DataProperties extends Properties
 	 */
 	public long getTime (String key)
 	{
-		String time = getString (key);
+		String time = getProperty(key);
 		if (time == null) return -1;
 		if (time.length() == 0) return 0;
 		long ret = 0;
@@ -293,7 +277,7 @@ public final class DataProperties extends Properties
 	 */
 	public Color getColor (String key, Color defaults)
 	{
-		String str = getString (key);
+		String str = getProperty (key);
 		if (str == null) return defaults;
 		try
 		{

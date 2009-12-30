@@ -56,10 +56,10 @@ public final class ConnectionHandler implements Runnable
 				Socket outSocket;
 				try
 				{
-					if (proxy.getProxyHost() == null)
+					if (proxy.getTargetProxyHost() == null)
 						outSocket = new Socket (request.getHost(), request.getPort());
 					else
-						outSocket = new Socket (proxy.getProxyHost(), proxy.getProxyPort());
+						outSocket = new Socket (proxy.getTargetProxyHost(), proxy.getTargetProxyPort());
 
 					try
 					{

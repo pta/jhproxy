@@ -3,22 +3,21 @@
 <properties>
 <comment>HTProxy</comment>
 
-<entry key="htmlFilter.layers">
+<entry key="max_connection">60</entry>
+<entry key="listening_port">1306</entry>
+
+
+<!--
+<entry key="target_proxy.host">target_proxy.host</entry>
+<entry key="target_proxy.port">8080</entry>
+-->
+
+<entry key="filter.html">
 Tên liên hệ
 ContactName932
 </entry>
 
-<entry key="urlFilter.blocked.message.data">filter/URLFilterMsg.data</entry>
-
-<entry key="cache.duration.filters.url">
-.*/(\?.*)? 1h
-.*/servlet/.* 1h
-.*\.(s?html?|txt)(\?.*)? 1h
-</entry>
-
-<entry key="cache.duration.default">24h</entry>
-
-<entry key="urlFilter.layers">
+<entry key="filter.url">
 .*\.us
 .*casino.*
 ftp://.*
@@ -27,18 +26,23 @@ ftp://.*
 #.*\.php?.*
 </entry>
 
-<entry key="cache.memory.max">60000</entry>
-<entry key="cache.list">/tmp/cache/HTProxy.cache.list</entry>
-<entry key="cache.storage.max">6000000</entry>
-<entry key="connection.max">60</entry>
-<entry key="cache.storage.directory">/tmp/cache/HTProxy</entry>
-<entry key="listenning.port">1306</entry>
-<entry key="proxy.port">6</entry>
-<entry key="htmlFilter.blocked.message.data">filter/HTMLFilterMsg.data</entry>
+<entry key="cache.default_duration">24h</entry>
 
-<entry key="cache.duration.filters.contentType">
+<entry key="cache.url_duration">
+.*/(\?.*)? 1h
+.*/servlet/.* 1h
+.*\.(s?html?|txt)(\?.*)? 1h
+</entry>
+
+<entry key="cache.mime_duration">
 image/.* 24h
 text/.* 1h
 </entry>
+
+<entry key="cache.memory_capacity">60k</entry>
+<entry key="cache.storage_capacity">6m</entry>
+
+<entry key="cache.storage_index">/tmp/cache/JHProxy/index.txt</entry>
+<entry key="cache.storage_directory">/tmp/cache/JHProxy/storage</entry>
 
 </properties>

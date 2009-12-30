@@ -2,17 +2,18 @@ import java.net.*;
 import java.io.*;
 import pta.util.*;
 
-public final class JHProxy extends Thread
+public final class JHProxy
 {
 	DataProperties	propMain;
 	boolean			isRunning;
 
 	ThreadPool		threadPool = new ThreadPool();
 
-	String			proxyHost;
-	int				proxyPort;
+	String			targetProxyHost;
+	int				targetProxyPort;
 
-	ServerSocket	svrSocket;
+	ServerSocket	listeningSocket;
+	int				listeningPort;
 
 	public JHProxy()
 	{
@@ -25,17 +26,14 @@ public final class JHProxy extends Thread
 		catch (IOException e)
 		{
 			e.printStackTrace();
-			System.exit (1);
+			System.exit(1);
 		}
 
-		proxyHost = propMain.getString ("proxy.host");
+		targetProxyHost = propMain.getProperty ("target_proxy.host");
+		targetProxyPort = propMain.getInt ("target_proxy.port");
 
-		if (proxyHost != null && proxyHost.length() == 0)
-		{
-			proxyHost = null;
-		}
+		listeningPort = propMain.getInt ("listening_port");
 
-		proxyPort = propMain.getInt ("proxy.port");
 		/*
 		urlFilter = new URLFilter();
 		urlFilter.load (propMain, "urlFilter.");
@@ -48,30 +46,31 @@ public final class JHProxy extends Thread
 
 	public void start()
 	{
-		int port = propMain.getInt ("listenning.port");
 		try
 		{
-			svrSocket = new ServerSocket (port);
+			listeningSocket = new ServerSocket (listeningPort);
 		}
 		catch (IOException ioe)
 		{
 			ioe.printStackTrace();
 		}
-		System.out.println ("Starting Proxy at port: " + port);
-		if (proxyHost != null)
-			System.out.println ("Connections established through proxy: "
-					+ proxyHost + ":" + proxyPort);
-		isRunning = true;
-		super.start();
+
+		System.out.println ("Starting Proxy at port: " + listeningPort);
+
+		if (targetProxyHost != null)
+			System.out.println ("Connections established through target proxy: "
+					+ targetProxyHost + ":" + targetProxyPort);
+
+		this.run();
 	}
 
 	public void run()
 	{
 		try
 		{
-			while (isRunning)
+			while (true)
 			{
-				Socket incSocket = svrSocket.accept();
+				Socket incSocket = listeningSocket.accept();
 				threadPool.handle (new ConnectionHandler (this, incSocket));
 			}
 		}
@@ -81,14 +80,14 @@ public final class JHProxy extends Thread
 		}
 	}
 
-	public String getProxyHost()
+	public String getTargetProxyHost()
 	{
-		return proxyHost;
+		return targetProxyHost;
 	}
 
-	public int getProxyPort()
+	public int getTargetProxyPort()
 	{
-		return proxyPort;
+		return targetProxyPort;
 	}
 
 	public static void main (String[] args)
