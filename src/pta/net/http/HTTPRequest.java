@@ -110,31 +110,30 @@ public final class HTTPRequest
 					&& data.get(-3) == '\n'
 					&& data.get(-4) == '\r')
 			{
-				if (length == 0)
-				{
-					this.request = data.getByteArray();
-				}
-				else
-				{
-					int size = data.size();
-
-					this.request = new byte[length + size];
-					
-					System.arraycopy (data.getByteArray(), 0,
-							this.request, 0, size);
-
-					in.read (this.request, size, length);
-				}
-
 				break;
 			}
 		}
+
+		if (length == 0)
+		{
+			this.request = data.getByteArray();
+		}
+		else
+		{
+			int size = data.size();
+
+			this.request = new byte[length + size];
+
+			System.arraycopy (data.getByteArray(), 0, this.request, 0, size);
+
+			in.read (this.request, size, length);
+		}
 	}
 
-	// public byte[] getData() {return (byte[])request.clone();}
+	// public byte[] getData() {return (byte[])this.request.clone();}
 	public byte[] getData()
 	{
-		return request;
+		return this.request;
 	}
 
 	// public void setData(byte[] data) {this.request = (byte[])data.clone();}

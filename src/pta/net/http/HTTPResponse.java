@@ -14,7 +14,7 @@ public final class HTTPResponse
 	private byte[]	response;
 	private int		statusCode;
 	private String	httpVersion;
-	private int		messageBodyOffset	= -1;
+	private int		headerLength;
 	private String	contentType;
 
 	private Date	lastModified;
@@ -23,7 +23,7 @@ public final class HTTPResponse
 
 	public long size()
 	{
-		return response.length + 4 + httpVersion.length() * 2 + 12 + 4
+		return this.response.length + 4 + httpVersion.length() * 2 + 12 + 4
 				+ contentType.length() * 2 + 12;
 	}
 
@@ -35,9 +35,9 @@ public final class HTTPResponse
 		int inInt;
 		boolean chunkedEncoding = false;
 		int lineCnt = 0;
-		int length = -1;
+		int contentLength = -1;
 
-		main: while ((inInt = in.read()) != -1)
+		while ((inInt = in.read()) != -1)
 		{
 			byte b = (byte) inInt;
 			line.append ((char) b);
@@ -51,7 +51,7 @@ public final class HTTPResponse
 					// "\r\r" then must be the end
 					if (data.get(-2) == '\r')
 					{
-						break main;
+						break;
 					}
 
 					String str = line.toString().trim();
@@ -66,7 +66,7 @@ public final class HTTPResponse
 					}
 					else if (str.startsWith ("Content-Length: "))
 					{
-						length = Integer.parseInt (str.substring (16));
+						contentLength = Integer.parseInt (str.substring (16));
 					}
 					else if (str.startsWith ("Transfer-Encoding: chunked"))
 					{
@@ -100,130 +100,128 @@ public final class HTTPResponse
 					&& data.get(-3) == '\n'
 					&& data.get(-4) == '\r')
 			{
-				/*
-				 * 4.3 Message Body: ...All responses to the HEAD request
-				 * method MUST NOT include a message-body, even though the
-				 * presence of entity- header fields might lead one to
-				 * believe they do. All 1xx (informational), 204 (no
-				 * content), and 304 (not modified) responses MUST NOT
-				 * include a message-body. All other responses do include a
-				 * message-body, although it MAY be of zero length.
-				 */
-				if ((request != null && request.getMethod().equals ("HEAD"))
-						|| statusCode == 204 || statusCode == 304
-						|| (100 <= statusCode && statusCode < 200))
-				{
-					break main;
-				}
-
-				if (length == 0) // no response-body at all
-				{
-					break main;
-				}
-
-				messageBodyOffset = data.size();
-
-				if (length == -1) // message-body contains zero or more chunks data...
-				{
-					if (!chunkedEncoding)
-					{
-						while ((inInt = in.read()) != -1)
-						{
-							data.write (inInt);
-						}
-
-						break main;
-					}
-
-					// read all the data chunks..
-					StringBuffer sb = new StringBuffer(8);
-
-					while (true)
-					{
-						// chunk = chunk-size [ chunk-extension ] CRLF
-						// chunk-data CRLF
-						sb.setLength (0);
-
-						while ((inInt = in.read()) != -1)
-						{
-							data.write (inInt);
-							if (inInt == ';' || inInt == '\r')
-								break;
-							sb.append ((char) inInt);
-						}
-
-						length = Integer.valueOf (sb.toString(), 16).intValue();
-
-						// skip rest of this line
-						do
-						{
-							data.write (inInt = in.read());
-						}
-						while (inInt != '\n');
-
-						if (length != 0)
-						{
-							for (int i = 0; i < length; i++)
-							{
-								data.write (in.read());
-							}
-						}
-
-						// skip 1 line
-						do
-						{
-							data.write (inInt = in.read());
-						}
-						while (inInt != '\n');
-
-						if (length == 0)
-						{
-							break main;
-						}
-					}
-				}
-
-				size = data.size();
-
-				this.response = new byte[length + size];
-				System.arraycopy (data.getByteArray(), 0, response, 0, size);
-
-				while (length > 0)
-				{
-					int r = in.read (this.response, size, length);
-
-					if (r == -1) break;
-
-					size += r;
-					length -= r;
-				}
-
-				return;
+				break;
 			}
-		}// main while
+		}
 
-		this.response = data.getByteArray();
+		/*
+		 * 4.3 Message Body: ...All responses to the HEAD request
+		 * method MUST NOT include a message-body, even though the
+		 * presence of entity-header fields might lead one to
+		 * believe they do. All 1xx (informational), 204 (no
+		 * content), and 304 (not modified) responses MUST NOT
+		 * include a message-body. All other responses do include a
+		 * message-body, although it MAY be of zero length.
+		 */
+		if (contentLength == 0 || request.getMethod().equals ("HEAD")
+				|| statusCode == 204 || statusCode == 304
+				|| (100 <= statusCode && statusCode < 200))
+		{
+			this.response = data.getByteArray();
+			headerLength = this.response.length;
+		}
+		else if (contentLength > 0)
+		{
+			headerLength = data.size();
+
+			int size = data.size();
+
+			this.response = new byte[contentLength + size];
+			System.arraycopy (data.getByteArray(), 0, this.response, 0, size);
+
+			while (contentLength > 0)
+			{
+				int r = in.read (this.response, size, contentLength);
+
+				if (r == -1) break;
+
+				size += r;
+				contentLength -= r;
+			}
+		}
+		else // message-body contains zero or more chunks data...
+		{
+			headerLength = data.size();
+
+			if (!chunkedEncoding)
+			{
+				while ((inInt = in.read()) != -1)
+				{
+					data.write (inInt);
+				}
+			}
+			else
+			{
+				// read all the data chunks..
+				StringBuffer sb = new StringBuffer(8);
+				int length;
+
+				do
+				{
+					// chunk = chunk-size [ chunk-extension ] CRLF
+					// chunk-data CRLF
+					sb.setLength (0);
+
+					while ((inInt = in.read()) != -1)
+					{
+						data.write (inInt);
+						if (inInt == ';' || inInt == '\r')
+							break;
+						sb.append ((char) inInt);
+					}
+
+					length = Integer.valueOf (sb.toString(), 16).intValue();
+
+					// skip rest of this line
+					do
+					{
+						data.write (inInt = in.read());
+					}
+					while (inInt != '\n');
+
+					if (length > 0)
+					{
+						for (int i = 0; i < length; ++i)
+						{
+							data.write (in.read());
+						}
+					}
+
+					// skip 1 line
+					do
+					{
+						data.write (inInt = in.read());
+					}
+					while (inInt != '\n');
+				}
+				while (length > 0);
+			}
+
+			this.response = data.getByteArray();
+		}
 	}
 
-	public byte[] getData() {return response;}
+	public byte[] getData() {return this.response;}
 	public int getStatusCode() {return statusCode;}
 	public Date getLastModified() {return lastModified;}
 	public String getContentType() {return contentType;}
 
 	public String getContentText()
 	{
-		if (contentType == null) return null;
-		if (!contentType.startsWith ("text/")) return null;
-		if (messageBodyOffset < 0) return null;
-		try
+		if (contentType.startsWith ("text/")
+				&& this.response.length > headerLength)
 		{
-			return new String (response, messageBodyOffset, response.length
-					- messageBodyOffset, "UTF-8");
+			try
+			{
+				return new String (this.response, headerLength,
+						this.response.length - headerLength, "UTF-8");
+			}
+			catch (UnsupportedEncodingException uee)
+			{
+				uee.printStackTrace();
+			}
 		}
-		catch (UnsupportedEncodingException uee)
-		{
-			uee.printStackTrace();
-			return null;
-		}
+
+		return null;
 	}
 }
