@@ -8,6 +8,7 @@ import java.io.*;
 import java.util.*;
 import java.net.*;
 import java.text.*;
+
 import pta.util.*;
 
 public final class HTTPRequest
@@ -26,7 +27,7 @@ public final class HTTPRequest
 
 	private Date				ifModifiedSince;
 
-	private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat ("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
+	private static final DateFormat DATE_FORMAT = new SimpleDateFormat ("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
 
 	public void parse (InputStream in) throws IOException, SocketException
 	{
@@ -82,7 +83,7 @@ public final class HTTPRequest
 
 						try
 						{
-							ifModifiedSince = simpleDateFormat.parse (strDate);
+							ifModifiedSince = DATE_FORMAT.parse (strDate);
 							/*System.out.println(strDate);
 							System.out.println(ifModifiedSince);/**/
 						}
