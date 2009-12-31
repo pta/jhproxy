@@ -21,12 +21,6 @@ public final class HTTPResponse
 
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat ("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
 
-	public long size()
-	{
-		return this.data.length + 4 + httpVersion.length() * 2 + 12 + 4
-				+ contentType.length() * 2 + 12;
-	}
-
 	public void parse (InputStream in, HTTPRequest request) throws IOException
 	{
 		FreeByteArrayOutputStream dataOS = new FreeByteArrayOutputStream (1500);
@@ -205,6 +199,7 @@ public final class HTTPResponse
 	public int getStatusCode() {return statusCode;}
 	public Date getLastModified() {return lastModified;}
 	public String getContentType() {return contentType;}
+	public String getHttpVersion () {return httpVersion;}
 
 	public String getContentText()
 	{
