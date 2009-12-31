@@ -7,15 +7,19 @@ package pta.net.http;
 import java.io.*;
 import java.util.*;
 import java.text.*;
+import pta.util.FreeByteArrayOutputStream;
 
 public final class HTTPResponse
 {
 	private byte[]	response;
 	private int		statusCode;
 	private String	httpVersion;
-	private Date	lastModified		= new Date();
 	private int		messageBodyOffset	= -1;
 	private String	contentType;
+
+	private Date	lastModified;
+
+	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat ("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
 
 	public long size()
 	{
@@ -31,41 +35,41 @@ public final class HTTPResponse
 	 */
 	public void parse (InputStream in, HTTPRequest request) throws IOException
 	{
+		FreeByteArrayOutputStream data = new FreeByteArrayOutputStream (1500);
 		StringBuffer line = new StringBuffer (128);
-		ArrayList<Byte> data = new ArrayList<Byte> (10240);
+
 		int inInt;
 		boolean chunkedEncoding = false;
-		int size;
-		byte b = -1;
 		int lineCnt = 0;
 		int length = -1;
 
-		main: while ( (inInt = in.read()) != -1)
+		main: while ((inInt = in.read()) != -1)
 		{
-
-			b = (byte) inInt;
+			byte b = (byte) inInt;
 			line.append ((char) b);
-			data.add (new Byte (b));
-			size = data.size();
+			data.write(b);
+			int size = data.size();
 
 			if (b == '\r')
 			{
 				if (size > 1)
 				{
 					// "\r\r" then must be the end
-					if ( ((Byte) data.get (size - 2)).byteValue() == '\r')
+					if (data.get(-2) == '\r')
 					{
 						break main;
 					}
+
 					String str = line.toString().trim();
 					// System.out.println('\t'+str);
+
 					if (lineCnt == 0)
 					{
 						// HTTP/1.0 200 OK
 						String[] parts = str.split (" ");
 						this.httpVersion = parts[0];
 						this.statusCode = Integer.parseInt (parts[1]);
-						lineCnt++;
+						++lineCnt;
 					}
 					else if (str.startsWith ("Content-Length: "))
 					{
@@ -82,157 +86,134 @@ public final class HTTPResponse
 					else if (str.startsWith ("Last-Modified: "))
 					{
 						String strDate = str.substring (15);
-						SimpleDateFormat dateFormat;
-						if (strDate.endsWith ("GMT"))
-						{
-							if (0 <= strDate.indexOf ('-'))
-							{ // Monday, 06-Jun-1984 23:59:59 GMT
-								dateFormat = new SimpleDateFormat (
-										"EEEEEEEE, dd-MMM-yyyy HH:mm:ss 'GMT'");
-							}
-							else
-							{ // Mon, 06 Jun 1984 23:59:59 GMT
-								dateFormat = new SimpleDateFormat (
-										"EEE, dd MMM yyyy HH:mm:ss 'GMT'");
-							}
-						}
-						else
-						{ // asctime-strDate
-							// isAsctimeDate = true;
-							if (strDate.charAt (8) == ' ')
-							{ // Mon Jun 6 23:59:59 1984
-								dateFormat = new SimpleDateFormat (
-										"EEE MMM  d HH:mm:ss yyyy");
-							}
-							else
-							{ // Mon Jun 13 23:59:59 1984
-								dateFormat = new SimpleDateFormat (
-										"EEE MMM dd HH:mm:ss yyyy");
-							}
-						}
-						dateFormat.setTimeZone (new SimpleTimeZone (0, "GMT"));
+
 						try
 						{
-							lastModified = dateFormat.parse (strDate);
+							lastModified = DATE_FORMAT.parse (strDate);
 							// System.out.println(lastModified);
 						}
 						catch (ParseException pe)
 						{
-							System.out.println (dateFormat.toPattern());
+							System.out.println (DATE_FORMAT.toPattern());
 							pe.printStackTrace();
 							System.exit (0);
 						}
 					}
 				}
+
 				line.setLength (0); // reset the line buffer
 			}
-			else if (b == '\n')
+			else if (b == '\n'
+					&& data.get(-2) == '\r'
+					&& data.get(-3) == '\n'
+					&& data.get(-4) == '\r')
 			{
-				if ( ( ((Byte) data.get (size - 4)).byteValue() == '\r')
-						&& ( ((Byte) data.get (size - 3)).byteValue() == '\n')
-						&& ( ((Byte) data.get (size - 2)).byteValue() == '\r'))
+				/*
+				 * 4.3 Message Body: ...All responses to the HEAD request
+				 * method MUST NOT include a message-body, even though the
+				 * presence of entity- header fields might lead one to
+				 * believe they do. All 1xx (informational), 204 (no
+				 * content), and 304 (not modified) responses MUST NOT
+				 * include a message-body. All other responses do include a
+				 * message-body, although it MAY be of zero length.
+				 */
+				if ((request != null && request.getMethod().equals ("HEAD"))
+						|| statusCode == 204 || statusCode == 304
+						|| (100 <= statusCode && statusCode < 200))
 				{
-					/*
-					 * 4.3 Message Body: ...All responses to the HEAD request
-					 * method MUST NOT include a message-body, even though the
-					 * presence of entity- header fields might lead one to
-					 * believe they do. All 1xx (informational), 204 (no
-					 * content), and 304 (not modified) responses MUST NOT
-					 * include a message-body. All other responses do include a
-					 * message-body, although it MAY be of zero length.
-					 */
-					if ( (request != null && /**/request.getMethod().equals (
-							"HEAD"))
-							|| statusCode == 204
-							|| statusCode == 304
-							|| (100 <= statusCode && statusCode < 200))
+					break main;
+				}
+
+				if (length == 0)
+				{ // no response-body at all
+					break main;
+				}
+
+				messageBodyOffset = data.size();
+
+				if (length == -1)
+				{
+					// message-body contains zero or more chunks data...
+
+					if (!chunkedEncoding)
 					{
-						break main;
-					}
-					if (length == 0)
-					{ // no response-body at all
-						break main;
-					}
-					messageBodyOffset = data.size();
-					if (length == -1)
-					{ // message-body contains zero or more chunks data...
-						if (!chunkedEncoding)
+						while ((inInt = in.read()) != -1)
 						{
-							while ( (inInt = in.read()) != -1)
+							data.write (inInt);
+						}
+
+						break main;
+					}
+
+					// read all the data chunks..
+					StringBuffer sb = new StringBuffer(8);
+
+					while (true)
+					{
+						// chunk = chunk-size [ chunk-extension ] CRLF
+						// chunk-data CRLF
+						sb.setLength (0);
+
+						while ((inInt = in.read()) != -1)
+						{
+							data.write (inInt);
+							if (inInt == ';' || inInt == '\r')
+								break;
+							sb.append ((char) inInt);
+						}
+
+						// System.out.println("\t\t"+sb.toString());
+						length = Integer.valueOf (sb.toString(), 16).intValue();
+
+						// skip rest of this line
+						do
+						{
+							data.write (inInt = in.read());
+						}
+						while (inInt != '\n');
+
+						if (length != 0)
+						{
+							for (int i = 0; i < length; i++)
 							{
-								data.add (new Byte ((byte) inInt));
+								data.write (in.read());
 							}
+						}
+
+						// skip 1 line
+						do
+						{
+							data.write (inInt = in.read());
+						}
+						while (inInt != '\n');
+
+						if (length == 0)
+						{
 							break main;
 						}
-						// read all the data chunks..
-						StringBuffer sb = new StringBuffer (8);
-						while (true)
-						{
-							// chunk = chunk-size [ chunk-extension ] CRLF
-							// chunk-data CRLF
-							sb.setLength (0);
-
-							while ( (inInt = in.read()) != -1)
-							{
-								data.add (new Byte ((byte) inInt));
-								if (inInt == ';' || inInt == '\r') break;
-								sb.append ((char) inInt);
-							}
-
-							// System.out.println("\t\t"+sb.toString());
-							length = Integer.valueOf (sb.toString(), 16).intValue();
-
-							// skip rest of this line
-							while ( (inInt = in.read()) != -1)
-							{
-								data.add (new Byte ((byte) inInt));
-								if (inInt == '\n') break;
-							}
-
-							if (length != 0)
-							{
-								for (int i = 0; i < length; i++)
-								{
-									data.add (new Byte ((byte) in.read()));
-								}
-							}
-
-							// skip 1 line
-							while ( (inInt = in.read()) != -1)
-							{
-								data.add (new Byte ((byte) inInt));
-								if (inInt == '\n') break;
-							}
-
-							if (length == 0)
-							{
-								break main;
-							}
-						}
 					}
-					size = data.size();
-					this.response = new byte[length + size];
-					for (int i = 0; i < size; i++)
-					{
-						this.response[i] = ((Byte) data.get (i)).byteValue();
-					}
-					int r = 0;
-					while ( (r = in.read (this.response, size, length)) != -1
-							&& length > 0)
-					{
-						size += r;
-						length -= r;
-					}
-					return;
 				}
+
+				size = data.size();
+
+				this.response = new byte[length + size];
+				System.arraycopy (data.getByteArray(), 0, response, 0, size);
+
+				while (length > 0)
+				{
+					int r = in.read (this.response, size, length);
+
+					if (r == -1) break;
+
+					size += r;
+					length -= r;
+				}
+
+				return;
 			}
 		}// main while
-		size = data.size();
-		this.response = new byte[size];
-		for (int i = 0; i < size; i++)
-		{
-			this.response[i] = ((Byte) data.get (i)).byteValue();
-		}
+
+		this.response = data.getByteArray();
 	}
 
 	public byte[] getData()
