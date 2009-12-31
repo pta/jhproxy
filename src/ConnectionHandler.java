@@ -156,11 +156,11 @@ public final class ConnectionHandler implements Runnable
 			InputStream outIS = outSocket.getInputStream();
 			try
 			{
-				HTTPResponse response = new HTTPResponse();
+				HTTPResponse response = new HTTPResponse (request);
 
 				try
 				{
-					response.parse (outIS, request);
+					response.parse (outIS);
 					return response;
 				}
 				catch (IOException ioe)

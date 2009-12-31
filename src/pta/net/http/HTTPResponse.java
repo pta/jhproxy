@@ -11,7 +11,9 @@ import pta.util.FreeByteArrayOutputStream;
 
 public final class HTTPResponse
 {
+	private HTTPRequest request;
 	private byte[]	data;
+
 	private int		statusCode;
 	private String	httpVersion;
 	private int		headerLength;
@@ -21,7 +23,12 @@ public final class HTTPResponse
 
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat ("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
 
-	public void parse (InputStream in, HTTPRequest request) throws IOException
+	public HTTPResponse (HTTPRequest request)
+	{
+		this.request = request;
+	}
+
+	public void parse (InputStream in) throws IOException
 	{
 		FreeByteArrayOutputStream dataOS = new FreeByteArrayOutputStream (1500);
 		StringBuffer line = new StringBuffer (128);
@@ -99,7 +106,7 @@ public final class HTTPResponse
 		}
 
 		/*
-		 * 4.3 Message Body: ...All responses to the HEAD request
+		 * 4.3 Message Body: ...All responses to the HEAD this.request
 		 * method MUST NOT include a message-body, even though the
 		 * presence of entity-header fields might lead one to
 		 * believe they do. All 1xx (informational), 204 (no
@@ -107,7 +114,7 @@ public final class HTTPResponse
 		 * include a message-body. All other responses do include a
 		 * message-body, although it MAY be of zero length.
 		 */
-		if (contentLength == 0 || request.getMethod().equals ("HEAD")
+		if (contentLength == 0 || this.request.getMethod().equals ("HEAD")
 				|| statusCode == 204 || statusCode == 304
 				|| (100 <= statusCode && statusCode < 200))
 		{
