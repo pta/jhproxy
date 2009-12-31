@@ -27,12 +27,6 @@ public final class HTTPResponse
 				+ contentType.length() * 2 + 12;
 	}
 
-	/**
-	 * bugs: isInterrupted never occurs if there no synchronized block in the
-	 * loops since isInterrupted can only change by the other threads, this
-	 * thread must synchronized to make the new value really commited. Java's
-	 * transient keyword has nothing to do with thread.
-	 */
 	public void parse (InputStream in, HTTPRequest request) throws IOException
 	{
 		FreeByteArrayOutputStream data = new FreeByteArrayOutputStream (1500);
@@ -61,7 +55,6 @@ public final class HTTPResponse
 					}
 
 					String str = line.toString().trim();
-					// System.out.println('\t'+str);
 
 					if (lineCnt == 0)
 					{
@@ -90,7 +83,6 @@ public final class HTTPResponse
 						try
 						{
 							lastModified = DATE_FORMAT.parse (strDate);
-							// System.out.println(lastModified);
 						}
 						catch (ParseException pe)
 						{
@@ -124,17 +116,15 @@ public final class HTTPResponse
 					break main;
 				}
 
-				if (length == 0)
-				{ // no response-body at all
+				if (length == 0) // no response-body at all
+				{
 					break main;
 				}
 
 				messageBodyOffset = data.size();
 
-				if (length == -1)
+				if (length == -1) // message-body contains zero or more chunks data...
 				{
-					// message-body contains zero or more chunks data...
-
 					if (!chunkedEncoding)
 					{
 						while ((inInt = in.read()) != -1)
@@ -162,7 +152,6 @@ public final class HTTPResponse
 							sb.append ((char) inInt);
 						}
 
-						// System.out.println("\t\t"+sb.toString());
 						length = Integer.valueOf (sb.toString(), 16).intValue();
 
 						// skip rest of this line
@@ -216,25 +205,10 @@ public final class HTTPResponse
 		this.response = data.getByteArray();
 	}
 
-	public byte[] getData()
-	{
-		return response;
-	}
-
-	public int getStatusCode()
-	{
-		return statusCode;
-	}
-
-	public Date getLastModified()
-	{
-		return lastModified;
-	}
-
-	public String getContentType()
-	{
-		return contentType;
-	}
+	public byte[] getData() {return response;}
+	public int getStatusCode() {return statusCode;}
+	public Date getLastModified() {return lastModified;}
+	public String getContentType() {return contentType;}
 
 	public String getContentText()
 	{
