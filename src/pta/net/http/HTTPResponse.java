@@ -11,7 +11,7 @@ import pta.util.FreeByteArrayOutputStream;
 
 public final class HTTPResponse
 {
-	private byte[]	response;
+	private byte[]	data;
 	private int		statusCode;
 	private String	httpVersion;
 	private int		headerLength;
@@ -23,13 +23,13 @@ public final class HTTPResponse
 
 	public long size()
 	{
-		return this.response.length + 4 + httpVersion.length() * 2 + 12 + 4
+		return this.data.length + 4 + httpVersion.length() * 2 + 12 + 4
 				+ contentType.length() * 2 + 12;
 	}
 
 	public void parse (InputStream in, HTTPRequest request) throws IOException
 	{
-		FreeByteArrayOutputStream data = new FreeByteArrayOutputStream (1500);
+		FreeByteArrayOutputStream dataOS = new FreeByteArrayOutputStream (1500);
 		StringBuffer line = new StringBuffer (128);
 
 		int inInt;
@@ -41,15 +41,15 @@ public final class HTTPResponse
 		{
 			byte b = (byte) inInt;
 			line.append ((char) b);
-			data.write(b);
-			int size = data.size();
+			dataOS.write(b);
+			int size = dataOS.size();
 
 			if (b == '\r')
 			{
 				if (size > 1)
 				{
 					// "\r\r" then must be the end
-					if (data.get(-2) == '\r')
+					if (dataOS.get(-2) == '\r')
 					{
 						break;
 					}
@@ -96,9 +96,9 @@ public final class HTTPResponse
 				line.setLength (0); // reset the line buffer
 			}
 			else if (b == '\n'
-					&& data.get(-2) == '\r'
-					&& data.get(-3) == '\n'
-					&& data.get(-4) == '\r')
+					&& dataOS.get(-2) == '\r'
+					&& dataOS.get(-3) == '\n'
+					&& dataOS.get(-4) == '\r')
 			{
 				break;
 			}
@@ -117,21 +117,21 @@ public final class HTTPResponse
 				|| statusCode == 204 || statusCode == 304
 				|| (100 <= statusCode && statusCode < 200))
 		{
-			this.response = data.getByteArray();
-			headerLength = this.response.length;
+			this.data = dataOS.getByteArray();
+			headerLength = this.data.length;
 		}
 		else if (contentLength > 0)
 		{
-			headerLength = data.size();
+			headerLength = dataOS.size();
 
-			int size = data.size();
+			int size = dataOS.size();
 
-			this.response = new byte[contentLength + size];
-			System.arraycopy (data.getByteArray(), 0, this.response, 0, size);
+			this.data = new byte[contentLength + size];
+			System.arraycopy (dataOS.getByteArray(), 0, this.data, 0, size);
 
 			while (contentLength > 0)
 			{
-				int r = in.read (this.response, size, contentLength);
+				int r = in.read (this.data, size, contentLength);
 
 				if (r == -1) break;
 
@@ -139,32 +139,32 @@ public final class HTTPResponse
 				contentLength -= r;
 			}
 		}
-		else // message-body contains zero or more chunks data...
+		else // message-body contains zero or more chunks dataOS...
 		{
-			headerLength = data.size();
+			headerLength = dataOS.size();
 
 			if (!chunkedEncoding)
 			{
 				while ((inInt = in.read()) != -1)
 				{
-					data.write (inInt);
+					dataOS.write (inInt);
 				}
 			}
 			else
 			{
-				// read all the data chunks..
+				// read all the dataOS chunks..
 				StringBuffer sb = new StringBuffer(8);
 				int length;
 
 				do
 				{
 					// chunk = chunk-size [ chunk-extension ] CRLF
-					// chunk-data CRLF
+					// chunk-dataOS CRLF
 					sb.setLength (0);
 
 					while ((inInt = in.read()) != -1)
 					{
-						data.write (inInt);
+						dataOS.write (inInt);
 						if (inInt == ';' || inInt == '\r')
 							break;
 						sb.append ((char) inInt);
@@ -175,7 +175,7 @@ public final class HTTPResponse
 					// skip rest of this line
 					do
 					{
-						data.write (inInt = in.read());
+						dataOS.write (inInt = in.read());
 					}
 					while (inInt != '\n');
 
@@ -183,25 +183,25 @@ public final class HTTPResponse
 					{
 						for (int i = 0; i < length; ++i)
 						{
-							data.write (in.read());
+							dataOS.write (in.read());
 						}
 					}
 
 					// skip 1 line
 					do
 					{
-						data.write (inInt = in.read());
+						dataOS.write (inInt = in.read());
 					}
 					while (inInt != '\n');
 				}
 				while (length > 0);
 			}
 
-			this.response = data.getByteArray();
+			this.data = dataOS.getByteArray();
 		}
 	}
 
-	public byte[] getData() {return this.response;}
+	public byte[] getData() {return this.data;}
 	public int getStatusCode() {return statusCode;}
 	public Date getLastModified() {return lastModified;}
 	public String getContentType() {return contentType;}
@@ -209,12 +209,12 @@ public final class HTTPResponse
 	public String getContentText()
 	{
 		if (contentType.startsWith ("text/")
-				&& this.response.length > headerLength)
+				&& this.data.length > headerLength)
 		{
 			try
 			{
-				return new String (this.response, headerLength,
-						this.response.length - headerLength, "UTF-8");
+				return new String (this.data, headerLength,
+						this.data.length - headerLength, "UTF-8");
 			}
 			catch (UnsupportedEncodingException uee)
 			{

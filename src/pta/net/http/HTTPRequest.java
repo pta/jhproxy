@@ -13,7 +13,7 @@ import pta.util.*;
 
 public final class HTTPRequest
 {
-	private byte[]				request;
+	private byte[]				data;
 	private String				method;
 	private String				path;
 	private String				host;
@@ -31,7 +31,7 @@ public final class HTTPRequest
 
 	public void parse (InputStream in) throws IOException, SocketException
 	{
-		FreeByteArrayOutputStream data = new FreeByteArrayOutputStream (1400);
+		FreeByteArrayOutputStream dataOS = new FreeByteArrayOutputStream (1400);
 		StringBuffer line = new StringBuffer (128);
 
 		int inInt;
@@ -42,14 +42,14 @@ public final class HTTPRequest
 		{
 			byte b = (byte) inInt;
 			line.append ((char) b);
-			data.write (b);
+			dataOS.write (b);
 
 			if (b == '\r')
 			{
-				if (data.size() > 1)
+				if (dataOS.size() > 1)
 				{
 					// "\r\r" then must be the end
-					if (data.get(-2) == '\r')
+					if (dataOS.get(-2) == '\r')
 					{
 						break;
 					}
@@ -106,9 +106,9 @@ public final class HTTPRequest
 				line.setLength (0);
 			}
 			else if (b == '\n'
-					&& data.get(-2) == '\r'
-					&& data.get(-3) == '\n'
-					&& data.get(-4) == '\r')
+					&& dataOS.get(-2) == '\r'
+					&& dataOS.get(-3) == '\n'
+					&& dataOS.get(-4) == '\r')
 			{
 				break;
 			}
@@ -116,28 +116,28 @@ public final class HTTPRequest
 
 		if (length == 0)
 		{
-			this.request = data.getByteArray();
+			this.data = dataOS.getByteArray();
 		}
 		else
 		{
-			int size = data.size();
+			int size = dataOS.size();
 
-			this.request = new byte[length + size];
+			this.data = new byte[length + size];
 
-			System.arraycopy (data.getByteArray(), 0, this.request, 0, size);
+			System.arraycopy (dataOS.getByteArray(), 0, this.data, 0, size);
 
-			in.read (this.request, size, length);
+			in.read (this.data, size, length);
 		}
 	}
 
-	// public byte[] getData() {return (byte[])this.request.clone();}
+	// public byte[] getData() {return (byte[])this.data.clone();}
 	public byte[] getData()
 	{
-		return this.request;
+		return this.data;
 	}
 
-	// public void setData(byte[] data) {this.request = (byte[])data.clone();}
-	// public void setData(byte[] data) {this.request = data;}
+	// public void setData(byte[] dataOS) {this.data = (byte[])dataOS.clone();}
+	// public void setData(byte[] dataOS) {this.data = dataOS;}
 
 	public String getHost()
 	{
