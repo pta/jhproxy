@@ -29,7 +29,7 @@ public final class HTTPRequest
 
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat ("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
 
-	public void parse (InputStream in) throws IOException, SocketException
+	public void parse (InputStream in) throws IOException
 	{
 		FreeByteArrayOutputStream dataOS = new FreeByteArrayOutputStream (1400);
 		StringBuffer line = new StringBuffer (128);
