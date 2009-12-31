@@ -104,30 +104,28 @@ public final class HTTPRequest
 
 				line.setLength (0);
 			}
-			else if (b == '\n')
+			else if (b == '\n'
+					&& data.get(-2) == '\r'
+					&& data.get(-3) == '\n'
+					&& data.get(-4) == '\r')
 			{
-				if ((data.get(-4) == '\r')
-						&& (data.get(-3) == '\n')
-						&& (data.get(-2) == '\r'))
+				if (length == 0)
 				{
-					if (length == 0)
-					{
-						this.request = data.getByteArray();
-					}
-					else
-					{
-						int size = data.size();
-
-						this.request = new byte[length + size];
-						
-						System.arraycopy (data.getByteArray(), 0,
-								this.request, 0, size);
-
-						in.read (this.request, size, length);
-					}
-
-					break;
+					this.request = data.getByteArray();
 				}
+				else
+				{
+					int size = data.size();
+
+					this.request = new byte[length + size];
+					
+					System.arraycopy (data.getByteArray(), 0,
+							this.request, 0, size);
+
+					in.read (this.request, size, length);
+				}
+
+				break;
 			}
 		}
 	}
