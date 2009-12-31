@@ -45,14 +45,13 @@ public final class ConnectionHandler implements Runnable
 				try
 				{
 					incSocket.shutdownInput();
-					// inRequest.close();
 				}
 				catch (IOException ioe) {}
 			}
 
 			if (request.getURL() == null) return;
 
-			{ // passed the URLFilter
+			{
 				Socket outSocket;
 				try
 				{
@@ -94,14 +93,6 @@ public final class ConnectionHandler implements Runnable
 
 							incOS = null;
 						}
-						// if (response.getStatusCode()==304) { // Not
-						// Modified
-						// OutputStream os =new BufferedOutputStream(new
-						// FileOutputStream("J:\\out.data"));
-						// os.write(response.getData());
-						// os.flush();
-						// System.exit(0);
-						// }
 					}
 					finally
 					{
@@ -150,8 +141,6 @@ public final class ConnectionHandler implements Runnable
 		{
 			outOS.write (request.getData());
 			outOS.flush();
-			// System.out.println(new
-			// String(request.getData(),"ISO-8859-1"));
 
 			InputStream outIS = outSocket.getInputStream();
 			try
