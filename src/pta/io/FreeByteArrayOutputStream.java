@@ -26,4 +26,14 @@ public class FreeByteArrayOutputStream extends ByteArrayOutputStream
 	{
 		return buf;
 	}
+
+	public void reset()
+	{
+		count = 0;
+	}
+
+	public void resetBack (int offset)
+	{
+		count -= offset;
+	}
 }

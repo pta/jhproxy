@@ -15,12 +15,9 @@ public final class HTTPRequest
 {
 	private byte[]				data;
 	private String				method;
-	private String				path;
-	private String				host;
-	private int					port						= 80;
-	private String				query;
-	private String				httpVersion;
 	private URL					url;
+	private String				host;
+	private String				httpVersion;
 
 	private boolean				isNoCached;
 	private boolean				isKeepAlive;
@@ -60,18 +57,33 @@ public final class HTTPRequest
 					{
 						// GET http://host/link.ext?key=value HTTP/1.0
 						String[] parts = str.split (" ");
-						url = new URL (parts[1]);
 						this.method = parts[0];
-						this.host = url.getHost();
-						this.path = url.getPath();
-						this.query = url.getQuery();
-						this.port = url.getPort();
-						if (this.port == -1) this.port = 80;
+						this.url = new URL (parts[1]);
 						this.httpVersion = parts[2];
+
+						int p = parts[1].indexOf ("://");
+
+						// remove protocol://host:port from the first header line
+						if (p >= 0)
+						{
+							p = parts[1].indexOf ('/', p + 3);
+
+							dataOS.reset();
+							dataOS.write (parts[0].getBytes());
+							dataOS.write (' ');
+							dataOS.write (parts[1].substring(p).getBytes());
+							dataOS.write (' ');
+							dataOS.write (parts[2].getBytes());
+							dataOS.write ('\r');
+						}
 					}
 					else if (str.equals ("Proxy-Connection: keep-alive"))
 					{
 						this.isKeepAlive = true;
+					}
+					if (str.startsWith ("Host: "))
+					{
+						this.host = str.substring (6);
 					}
 					if (str.startsWith ("Content-Length: "))
 					{
@@ -136,51 +148,40 @@ public final class HTTPRequest
 		return this.data;
 	}
 
-	// public void setData(byte[] dataOS) {this.data = (byte[])dataOS.clone();}
-	// public void setData(byte[] dataOS) {this.data = dataOS;}
-
 	public String getHost()
 	{
-		return host;
+		return this.host;
 	}
-
-	// public void setHost(String host) {this.host = host;}
 
 	public String getMethod()
 	{
 		return method;
 	}
 
-	// public void setMethod(String method) {this.method = method;}
-
 	public String getQuery()
 	{
-		return query;
+		return this.url.getQuery();
 	}
-
-	// public void setQuery(String query) {this.query = query;}
 
 	public String getPath()
 	{
-		return path;
+		return this.url.getPath();
 	}
-
-	// public void setPath(String path) {this.path = path;}
 
 	public int getPort()
 	{
-		return port;
-	}
+		int port = this.url.getPort();
 
-	// public void setPort(int port) {this.port = port;}
+		if (port >= 0)
+			return port;
+		else
+			return this.url.getDefaultPort();
+	}
 
 	public String getHttpVersion()
 	{
 		return httpVersion;
 	}
-
-	// public void setHttpVersion(String httpVersion) {this.httpVersion =
-	// httpVersion;}
 
 	public long getIfModefiedSinceTime()
 	{
