@@ -8,8 +8,8 @@ import java.io.*;
 import java.util.*;
 import java.text.*;
 
+import pta.io.FreeByteArrayOutputStream;
 import pta.io.TeeOutputStream;
-import pta.util.FreeByteArrayOutputStream;
 
 public final class HTTPResponse
 {

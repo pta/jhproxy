@@ -9,7 +9,7 @@ import java.util.*;
 import java.net.*;
 import java.text.*;
 
-import pta.util.*;
+import pta.io.FreeByteArrayOutputStream;
 
 public final class HTTPRequest
 {
