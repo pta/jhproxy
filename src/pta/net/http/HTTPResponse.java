@@ -7,6 +7,8 @@ package pta.net.http;
 import java.io.*;
 import java.util.*;
 import java.text.*;
+
+import pta.io.TeeOutputStream;
 import pta.util.FreeByteArrayOutputStream;
 
 public final class HTTPResponse
@@ -30,7 +32,14 @@ public final class HTTPResponse
 
 	public void parse (InputStream in) throws IOException
 	{
+		this.parse (in, null);
+	}
+
+	public void parse (InputStream in, OutputStream out) throws IOException
+	{
 		FreeByteArrayOutputStream dataOS = new FreeByteArrayOutputStream (1500);
+		OutputStream teeOS = (out != null) ?
+				new TeeOutputStream (dataOS, out) : dataOS;
 		StringBuffer line = new StringBuffer (128);
 
 		int inInt;
@@ -42,7 +51,7 @@ public final class HTTPResponse
 		{
 			byte b = (byte) inInt;
 			line.append ((char) b);
-			dataOS.write(b);
+			teeOS.write(b);
 			int size = dataOS.size();
 
 			if (b == '\r')
@@ -125,6 +134,7 @@ public final class HTTPResponse
 		{
 			headerLength = dataOS.size();
 
+			/*
 			int size = dataOS.size();
 
 			this.data = new byte[contentLength + size];
@@ -139,6 +149,18 @@ public final class HTTPResponse
 				size += r;
 				contentLength -= r;
 			}
+			/**/
+
+			for (int i = 0; i < contentLength; ++i)
+			{
+				inInt = in.read();
+
+				if (inInt == -1) break;
+
+				teeOS.write (inInt);
+			}
+
+			this.data = dataOS.getByteArray();
 		}
 		else // message-body contains zero or more chunks dataOS...
 		{
@@ -148,7 +170,7 @@ public final class HTTPResponse
 			{
 				while ((inInt = in.read()) != -1)
 				{
-					dataOS.write (inInt);
+					teeOS.write (inInt);
 				}
 			}
 			else
@@ -165,7 +187,7 @@ public final class HTTPResponse
 
 					while ((inInt = in.read()) != -1)
 					{
-						dataOS.write (inInt);
+						teeOS.write (inInt);
 						if (inInt == ';' || inInt == '\r')
 							break;
 						sb.append ((char) inInt);
@@ -176,7 +198,7 @@ public final class HTTPResponse
 					// skip rest of this line
 					do
 					{
-						dataOS.write (inInt = in.read());
+						teeOS.write (inInt = in.read());
 					}
 					while (inInt != '\n');
 
@@ -184,14 +206,14 @@ public final class HTTPResponse
 					{
 						for (int i = 0; i < length; ++i)
 						{
-							dataOS.write (in.read());
+							teeOS.write (in.read());
 						}
 					}
 
 					// skip 1 line
 					do
 					{
-						dataOS.write (inInt = in.read());
+						teeOS.write (inInt = in.read());
 					}
 					while (inInt != '\n');
 				}

@@ -62,14 +62,13 @@ public final class ConnectionHandler implements Runnable
 
 					try
 					{
-						HTTPResponse response = getResponse (request, outSocket);
-
 						OutputStream incOS = incSocket.getOutputStream();
 						try
 						{
 							try
 							{
-								incOS.write (response.getData());
+								/*HTTPResponse response = /**/getResponse (request, outSocket, incOS);
+								//incOS.write (response.getData());
 							}
 							catch (SocketException se)
 							{
@@ -133,7 +132,7 @@ public final class ConnectionHandler implements Runnable
 		}
 	}
 
-	public HTTPResponse getResponse (HTTPRequest request, Socket outSocket) throws IOException
+	public HTTPResponse getResponse (HTTPRequest request, Socket outSocket, OutputStream incOS) throws IOException
 	{
 		OutputStream outOS = outSocket.getOutputStream();
 
@@ -149,7 +148,7 @@ public final class ConnectionHandler implements Runnable
 
 				try
 				{
-					response.parse (outIS);
+					response.parse (outIS, incOS);
 					return response;
 				}
 				catch (IOException ioe)
@@ -162,6 +161,8 @@ public final class ConnectionHandler implements Runnable
 			{
 				outIS.close();
 				outIS = null;
+				incOS.flush();
+				incOS.close();
 			}
 		}
 		catch (IOException ioe)
