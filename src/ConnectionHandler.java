@@ -145,17 +145,8 @@ public final class ConnectionHandler implements Runnable
 			try
 			{
 				HTTPResponse response = new HTTPResponse (request);
-
-				try
-				{
-					response.parse (outIS, incOS);
-					return response;
-				}
-				catch (IOException ioe)
-				{
-					ioe.printStackTrace();
-					return null;
-				}
+				response.parse (outIS, incOS);
+				return response;
 			}
 			finally
 			{
@@ -164,11 +155,6 @@ public final class ConnectionHandler implements Runnable
 				incOS.flush();
 				incOS.close();
 			}
-		}
-		catch (IOException ioe)
-		{
-			ioe.printStackTrace();
-			return null;
 		}
 		finally
 		{
