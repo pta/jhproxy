@@ -193,7 +193,7 @@ public final class HTTPResponse
 						sb.append ((char) inInt);
 					}
 
-					length = Integer.valueOf (sb.toString(), 16).intValue();
+					length = Integer.valueOf (sb.toString().trim(), 16).intValue();
 
 					// skip rest of this line
 					do
