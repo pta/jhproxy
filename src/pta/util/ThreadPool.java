@@ -1,34 +1,26 @@
 /*
- * @(#)ThreadPool.java 1.0 2009/12/29
- * Copyright 2009 PHẠM Tuấn Anh. All rights reserved.
+ * pta - PTA's Java Library Package
+ * Copyright (C) 2010  PHAM Tuan Anh
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package pta.util;
 
-// import java.util.*;
-
 public final class ThreadPool extends Thread
 {
-	/*
-	 * private Queue<Thread> waiting = new Queue<Thread>(); private
-	 * Queue<Thread> running = new Queue<Thread>();
-	 * 
-	 * private int capacity; private double limitRatio;
-	 * 
-	 * public ThreadPool (int capacity, double limitRatio) { this.capacity =
-	 * capacity; this.limitRatio = limitRatio; }
-	 * 
-	 * public ThreadPool() { this (1024, 0.75); }
-	 * 
-	 * public int getCapacity() {return capacity;} public double getLimitRatio()
-	 * {return limitRatio;} public int getWaitingCount() {return
-	 * waiting.size();} public int getRunningCount() {return running.size();}
-	 */
-
 	public void handle (Runnable runnable)
 	{
 		new Thread (runnable).start();
 	}
-
-	public static void main (String[] args)
-	{}
 }
