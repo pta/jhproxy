@@ -39,7 +39,10 @@ public final class JHProxy
 
 		try
 		{
-			propMain.loadFromXML ("jhproxy.xml");
+			if (new File ("jhproxy.xml").exists())
+				propMain.loadFromXML ("jhproxy.xml");
+			else
+				propMain.loadFromXML ("../jhproxy.xml");
 		}
 		catch (IOException e)
 		{
