@@ -1,6 +1,6 @@
 /*
  * JHProxy - A Java HTTP Proxy Server Application
- * Copyright (C) 2010  PHAM Tuan Anh
+ * Copyright (C) 2010  PHAM Tuan Anh <cs.PhamTuanAnh@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -113,6 +113,14 @@ public final class JHProxy
 
 	public static void main (String[] args)
 	{
+		System.out.println();
+		System.out.println ("JHProxy  Copyright (C) 2010  PHAM Tuan Anh <cs.PhamTuanAnh@gmail.com>");
+		System.out.println();
+		System.out.println ("This program comes with ABSOLUTELY NO WARRANTY.");
+		System.out.println ("This is free software, and you are welcome to");
+		System.out.println ("redistribute it under certain conditions.");
+		System.out.println();
+
 		new JHProxy().start();
 	}
 }

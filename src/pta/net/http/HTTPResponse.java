@@ -1,6 +1,6 @@
 /*
  * pta - PTA's Java Library Package
- * Copyright (C) 2010  PHAM Tuan Anh
+ * Copyright (C) 2010  PHAM Tuan Anh <cs.PhamTuanAnh@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
