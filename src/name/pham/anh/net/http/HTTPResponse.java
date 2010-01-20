@@ -1,5 +1,5 @@
 /*
- * pta - PTA's Java Library Package
+ * name.pham.anh - PTA's Java Library Package
  * Copyright (C) 2010  PHAM Tuan Anh <cs.PhamTuanAnh@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,14 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package pta.net.http;
+package name.pham.anh.net.http;
 
 import java.io.*;
 import java.util.*;
 import java.text.*;
 
-import pta.io.FreeByteArrayOutputStream;
-import pta.io.TeeOutputStream;
+import name.pham.anh.io.FreeByteArrayOutputStream;
+import name.pham.anh.io.TeeOutputStream;
+
 
 public final class HTTPResponse
 {

@@ -18,7 +18,8 @@
 
 import java.net.*;
 import java.io.*;
-import pta.util.*;
+
+import name.pham.anh.util.*;
 
 public final class JHProxy
 {

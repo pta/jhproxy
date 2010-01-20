@@ -1,5 +1,5 @@
 /*
- * pta - PTA's Java Library Package
+ * name.pham.anh - PTA's Java Library Package
  * Copyright (C) 2010  PHAM Tuan Anh <cs.PhamTuanAnh@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,26 +15,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package pta.io;
+package name.pham.anh.io;
 
-import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
 
-public final class NullOutputStream extends OutputStream
+public class FreeByteArrayOutputStream extends ByteArrayOutputStream
 {
-	/**
-     * A singleton.
-     */
-    public static final NullOutputStream NULL_OUTPUT_STREAM = new NullOutputStream();
-
-	public void write (int b)
+	public FreeByteArrayOutputStream()
 	{
+		super();
 	}
 
-	public void write (byte[] data, int offset, int length)
+	public FreeByteArrayOutputStream (int size)
 	{
+		super (size);
 	}
 
-	public void write (byte[] b)
+	public int get (int p)
 	{
+		if (p < 0)
+			return buf[count+p];
+		else
+			return buf[p];
+	}
+
+	public byte[] getByteArray()
+	{
+		return buf;
+	}
+
+	public void reset()
+	{
+		count = 0;
+	}
+
+	public void resetBack (int offset)
+	{
+		count -= offset;
 	}
 }

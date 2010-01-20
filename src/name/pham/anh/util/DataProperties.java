@@ -1,5 +1,5 @@
 /*
- * pta - PTA's Java Library Package
+ * name.pham.anh - PTA's Java Library Package
  * Copyright (C) 2010  PHAM Tuan Anh
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package pta.util;
+package name.pham.anh.util;
 
 import javax.swing.ImageIcon;
 import java.awt.Image;
@@ -42,7 +42,7 @@ public final class DataProperties extends Properties
 	/**
 	 * Construct a empty {@link DataProperties} with no defaults
 	 * {@link Properties}.
-	 * 
+	 *
 	 * @see Properties#Properties()
 	 */
 	public DataProperties()
@@ -53,7 +53,7 @@ public final class DataProperties extends Properties
 	/**
 	 * Construct a empty {@link DataProperties} with the given defaults
 	 * {@link Properties}.
-	 * 
+	 *
 	 * @see Properties#Properties(Properties)
 	 */
 	public DataProperties (Properties defaults)
@@ -63,7 +63,7 @@ public final class DataProperties extends Properties
 
 	/**
 	 * Loads properties from the file specified by <code>inputFile</code>.
-	 * 
+	 *
 	 * @param inputFile
 	 *        name of the properties file to load.
 	 * @throws IOException
@@ -79,7 +79,7 @@ public final class DataProperties extends Properties
 	public void load (String inputFile) throws IOException
 	{
 		BufferedInputStream bis = new BufferedInputStream (
-				new FileInputStream (inputFile)); 
+				new FileInputStream (inputFile));
 		this.load (bis);
 		bis.close();
 	}
@@ -87,15 +87,15 @@ public final class DataProperties extends Properties
 	public void loadFromXML (String inputFile) throws IOException, InvalidPropertiesFormatException
 	{
 		BufferedInputStream bis = new BufferedInputStream (
-				new FileInputStream (inputFile)); 
+				new FileInputStream (inputFile));
 		this.loadFromXML (bis);
 		bis.close();
 	}
-	
+
 	public void storeToXML (String outputFile, String comment) throws IOException
 	{
 		BufferedOutputStream bos = new BufferedOutputStream (
-				new FileOutputStream (outputFile)); 
+				new FileOutputStream (outputFile));
 		this.storeToXML (bos, comment);
 		bos.flush();
 		bos.close();
@@ -127,7 +127,7 @@ public final class DataProperties extends Properties
 	 * defined, the method search for the key in the <code>defaults</code>, it
 	 * make sure that no duplicate key-value pairs in the {@link DataProperties}
 	 * itself and its <code>defaults</code>
-	 * 
+	 *
 	 * @param key
 	 *        the key specify the property
 	 * @param value
@@ -146,7 +146,7 @@ public final class DataProperties extends Properties
 	/**
 	 * get the time distance measured in milliseconds in the following format:
 	 * key : [<hours>h][<minutes>'][<seconds>"][<miliseconds>]
-	 * 
+	 *
 	 * @return an long integer of time distance in milliceconds, <code>-1</code>
 	 *         if invalid format
 	 */
@@ -188,7 +188,7 @@ public final class DataProperties extends Properties
 
 	/**
 	 * set the <code>integer</code> property
-	 * 
+	 *
 	 * @see #getInt(String)
 	 */
 	public void setInt (String key, int value)
@@ -198,7 +198,7 @@ public final class DataProperties extends Properties
 
 	/**
 	 * get the <code>integer</code> property
-	 * 
+	 *
 	 * @return <code>0</code> if the property not found or not a number
 	 * @see #setInt(String,int)
 	 */
@@ -220,7 +220,7 @@ public final class DataProperties extends Properties
 
 	/**
 	 * set the <code>long</code> property
-	 * 
+	 *
 	 * @see #getLong(String)
 	 */
 	public void setLong (String key, long value)
@@ -230,7 +230,7 @@ public final class DataProperties extends Properties
 
 	/**
 	 * get the <code>long</code> property
-	 * 
+	 *
 	 * @return <code>0</code> if the property not found or not a number
 	 * @see #setLong(String,long)
 	 */
@@ -253,7 +253,7 @@ public final class DataProperties extends Properties
 	/**
 	 * set the property specified by key to <code>1</code> if value is
 	 * <code>true</code>, and <code>0</code> if value is <code>false</code>
-	 * 
+	 *
 	 * @see #getBoolean(String)
 	 */
 	public void setBoolean (String key, boolean value)
@@ -263,7 +263,7 @@ public final class DataProperties extends Properties
 
 	/**
 	 * get the <code>boolean</code> property specified by the key
-	 * 
+	 *
 	 * @return <code>true</code> if value is <code>1</code>, <code>false</code>
 	 *         if values is <code>0</code> or not found
 	 * @see #setBoolean(String,boolean)
@@ -281,7 +281,7 @@ public final class DataProperties extends Properties
 	 * <br>&nbsp;&nbsp;&nbsp;&nbsp; #RRGGBB
 	 * <br>&nbsp;&nbsp;&nbsp;&nbsp;rr gg bb
 	 * <br>&nbsp;&nbsp;&nbsp;&nbsp;rgb</code>
-	 * 
+	 *
 	 * @param key
 	 *        the key to find the property
 	 * @param defaults
@@ -324,7 +324,7 @@ public final class DataProperties extends Properties
 	/**
 	 * return {@link #getColor(String,Color) getColor(key,}{@link Color#RED}
 	 * {@link #getColor(String,Color) )}
-	 * 
+	 *
 	 * @param key
 	 *        the key to find the property
 	 * @return the {@link Color} object specified by input key
@@ -336,7 +336,7 @@ public final class DataProperties extends Properties
 
 	/**
 	 * get the {@link ImageIcon} specified by the property key
-	 * 
+	 *
 	 * @param key
 	 *        the key to find the property
 	 * @return the {@link ImageIcon} object specified by input key
@@ -349,7 +349,7 @@ public final class DataProperties extends Properties
 	/**
 	 * get the scaled instance of {@link ImageIcon} specified by the property
 	 * key
-	 * 
+	 *
 	 * @return the scaled to <code>(width,height)</code> instance of
 	 *         {@link ImageIcon} specified by the input key
 	 */

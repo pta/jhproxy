@@ -18,7 +18,8 @@
 
 import java.net.*;
 import java.io.*;
-import pta.net.http.*;
+
+import name.pham.anh.net.http.*;
 
 public final class ConnectionHandler implements Runnable
 {

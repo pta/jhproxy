@@ -1,5 +1,5 @@
 /*
- * pta - PTA's Java Library Package
+ * name.pham.anh - PTA's Java Library Package
  * Copyright (C) 2010  PHAM Tuan Anh <cs.PhamTuanAnh@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,42 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package pta.io;
+package name.pham.anh.util;
 
-import java.io.ByteArrayOutputStream;
-
-public class FreeByteArrayOutputStream extends ByteArrayOutputStream
+public final class ThreadPool extends Thread
 {
-	public FreeByteArrayOutputStream()
+	public void handle (Runnable runnable)
 	{
-		super();
-	}
-
-	public FreeByteArrayOutputStream (int size)
-	{
-		super (size);
-	}
-
-	public int get (int p)
-	{
-		if (p < 0)
-			return buf[count+p];
-		else
-			return buf[p];
-	}
-
-	public byte[] getByteArray()
-	{
-		return buf;
-	}
-
-	public void reset()
-	{
-		count = 0;
-	}
-
-	public void resetBack (int offset)
-	{
-		count -= offset;
+		new Thread (runnable).start();
 	}
 }
