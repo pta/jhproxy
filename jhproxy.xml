@@ -5,6 +5,7 @@
 
 <entry key="max_connection">60</entry>
 <entry key="listening_port">1306</entry>
+<entry key="telnet_port">1323</entry>
 
 
 <!--

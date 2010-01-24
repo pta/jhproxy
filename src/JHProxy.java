@@ -35,10 +35,20 @@ public final class JHProxy
 	ServerSocket	listeningSocket;
 	int				listeningPort;
 
+	TelnetDaemon	telnetDaemon;
+	int				telnetPort;
+
 	Filter			filter;
 
 	public JHProxy()
 	{
+		loadSettings();
+	}
+
+	public void loadSettings()
+	{
+		System.out.print ("Loading settings.. ");
+
 		propMain = new DataProperties();
 
 		try
@@ -59,13 +69,12 @@ public final class JHProxy
 
 		listeningPort = propMain.getInt ("listening_port");
 
-		loadSettings (propMain);
-	}
+		telnetPort = propMain.getInt ("telnet_port");
 
-	public void loadSettings (DataProperties prop)
-	{
-		String[] urlFilters = prop.getStringArray ("filter.url", null);
+		String[] urlFilters = propMain.getStringArray ("filter.url", null);
 		filter = new HTTPRequestFilter (urlFilters);
+
+		System.out.println ("done.");
 	}
 
 	public void start()
@@ -85,6 +94,13 @@ public final class JHProxy
 			System.out.println ("Connections established through target proxy: "
 					+ targetProxyHost + ":" + targetProxyPort);
 
+		if (telnetPort > 0)
+			telnetDaemon = new TelnetDaemon (this, telnetPort);
+		else
+			telnetDaemon = new TelnetDaemon (this);
+
+		telnetDaemon.start();
+
 		this.run();
 	}
 
@@ -98,10 +114,20 @@ public final class JHProxy
 				threadPool.handle (new ConnectionHandler (this, incSocket));
 			}
 		}
+		catch (SocketException se)
+		{
+			System.out.println ("Proxy socket has been closed.");
+		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
+	}
+
+	public void close()
+	{
+		telnetDaemon.close();
+		try {listeningSocket.close();} catch (IOException ioe) {ioe.printStackTrace();}
 	}
 
 	public String getTargetProxyHost()
@@ -124,6 +150,7 @@ public final class JHProxy
 		System.out.println ("redistribute it under certain conditions.");
 		System.out.println();
 
-		new JHProxy().start();
+		while (true)
+			new JHProxy().start();
 	}
 }
