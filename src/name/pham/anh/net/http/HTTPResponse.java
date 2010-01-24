@@ -169,23 +169,6 @@ public final class HTTPResponse
 		{
 			headerLength = dataOS.size();
 
-			/*
-			int size = dataOS.size();
-
-			this.data = new byte[contentLength + size];
-			System.arraycopy (dataOS.getByteArray(), 0, this.data, 0, size);
-
-			while (contentLength > 0)
-			{
-				int r = in.read (this.data, size, contentLength);
-
-				if (r == -1) break;
-
-				size += r;
-				contentLength -= r;
-			}
-			/**/
-
 			for (int i = 0; i < contentLength; ++i)
 			{
 				inInt = in.read();

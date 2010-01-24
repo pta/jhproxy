@@ -49,108 +49,75 @@ public final class ConnectionHandler implements Runnable
 			}
 			catch (SocketException se)
 			{
-				System.out.println ("Connection reset");
+				System.err.println ("Incoming connection reset: socket read error");
 			}
 			catch (IOException ioe)
 			{
-				System.out.println ("Cannot parse the request");
-				ioe.printStackTrace();
-				return;
+				System.err.println ("Cannot parse the request");
 			}
 			finally
 			{
+				try {incSocket.shutdownInput();} catch (IOException ioe) {}
 				incIS = null;
-
-				try
-				{
-					incSocket.shutdownInput();
-				}
-				catch (IOException ioe) {}
 			}
 
 			if (request.getURL() == null) return;
 
 			OutputStream incOS = incSocket.getOutputStream();
 
-			if (proxy.filter.blocks (request))
-			{
-				incOS.write (HTTPResponse.FORBIDDENT_RESPONSE_DATA);
-				incOS.flush();
-				return;
-			}
-
-			Socket outSocket;
 			try
 			{
-				if (proxy.getTargetProxyHost() == null)
-					outSocket = new Socket (request.getHost(), request.getPort());
-				else
-					outSocket = new Socket (proxy.getTargetProxyHost(), proxy.getTargetProxyPort());
-
-				try
+				if (proxy.filter.blocks (request))
 				{
+					incOS.write (HTTPResponse.FORBIDDENT_RESPONSE_DATA);
+				}
+				else
+				{
+					Socket outSocket = null;
+
 					try
 					{
-						try
-						{
-							getResponse (request, outSocket, incOS);
-						}
-						catch (SocketException se)
-						{
-							System.out.println ("Connection reset by peer: socket write error");
-						}
+						if (proxy.getTargetProxyHost() == null)
+							outSocket = new Socket (request.getHost(), request.getPort());
+						else
+							outSocket = new Socket (proxy.getTargetProxyHost(), proxy.getTargetProxyPort());
 
-						incOS.flush();
+						getResponse (request, outSocket, incOS);
+					}
+					catch (UnknownHostException uhe)
+					{
+						System.err.println ("Target or proxy host not found!");
+					}
+					catch (SocketException se)
+					{
+						System.err.println ("Connection reset by peer: socket write error");
 					}
 					finally
 					{
-						try
-						{
-							incOS.flush();
-						}
-						catch (IOException ioe) {}
-						try
-						{
-							incOS.close();
-						}
-						catch (IOException ioe) {}
-
-						incOS = null;
+						try {outSocket.close();} catch (IOException ioe) {}
+						outSocket = null;
 					}
 				}
-				finally
-				{
-					try
-					{
-						outSocket.close();
-					}
-					catch (IOException ioe) {}
-
-					outSocket = null;
-				}
-			}
-			catch (UnknownHostException uhe)
-			{
-				System.out.println ("request or proxy host not found!");
 			}
 			catch (IOException ioe)
 			{
 				ioe.printStackTrace();
 			}
+			finally
+			{
+				try {incOS.flush();} catch (IOException ioe) {}
+				try {incOS.close(); } catch (IOException ioe) {}
+				incOS = null;
+			}
 		}
 		catch (IOException ioe)
 		{
-			System.out .println ("Cannot create request socket I/O stream!");
+			System.err.println ("Cannot create incoming socket's I/O stream!");
 			ioe.printStackTrace();
 		}
 		finally
 		{
-			try
-			{
-				incSocket.close();
-			}
-			catch (IOException ioe)
-			{}
+			try {incSocket.close();} catch (IOException ioe) {}
 			incSocket = null;
 		}
 	}
