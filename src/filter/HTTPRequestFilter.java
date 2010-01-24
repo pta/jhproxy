@@ -15,11 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package filter;
 
 import java.util.regex.Pattern;
-import name.pham.anh.net.http.HTTPRequest;
+import http.HTTPRequest;
 
 public class HTTPRequestFilter implements Filter
 {
