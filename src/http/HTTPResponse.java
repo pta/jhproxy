@@ -34,8 +34,12 @@ public final class HTTPResponse
 	private String	httpVersion;
 	private int		headerLength;
 	private String	contentType;
+	private boolean	chunkedEncoding = false;
+	private int		contentLength = -1;
 
 	private Date	lastModified;
+
+	private FreeByteArrayOutputStream dataOS;
 
 	public static final byte[] FORBIDDENT_RESPONSE_DATA =
 			(
@@ -72,21 +76,23 @@ public final class HTTPResponse
 
 	public void parse (InputStream in, OutputStream out) throws IOException
 	{
-		FreeByteArrayOutputStream dataOS = new FreeByteArrayOutputStream (1500);
-		OutputStream teeOS = (out != null) ?
-				new TeeOutputStream (dataOS, out) : dataOS;
+		parseHead (in);
+		parseBody (in, out);
+	}
+
+	public void parseHead (InputStream in) throws IOException
+	{
+		dataOS = new FreeByteArrayOutputStream (1500);
 		StringBuffer line = new StringBuffer (128);
 
 		int inInt;
-		boolean chunkedEncoding = false;
 		int lineCnt = 0;
-		int contentLength = -1;
 
 		while ((inInt = in.read()) != -1)
 		{
 			byte b = (byte) inInt;
 			line.append ((char) b);
-			teeOS.write(b);
+			dataOS.write(b);
 			int size = dataOS.size();
 
 			if (b == '\r')
@@ -149,43 +155,47 @@ public final class HTTPResponse
 			}
 		}
 
-		/*
-		 * 4.3 Message Body: ...All responses to the HEAD this.request
-		 * method MUST NOT include a message-body, even though the
-		 * presence of entity-header fields might lead one to
-		 * believe they do. All 1xx (informational), 204 (no
-		 * content), and 304 (not modified) responses MUST NOT
-		 * include a message-body. All other responses do include a
-		 * message-body, although it MAY be of zero length.
-		 */
+		headerLength = dataOS.size();
+	}
+
+	public void parseBody (InputStream in, OutputStream out) throws IOException
+	{
+		if (out != null)
+			out.write (dataOS.getByteArray(), 0, headerLength);
+
+		OutputStream teeOS = (out != null) ?
+				new TeeOutputStream (dataOS, out) : dataOS;
+
 		if (contentLength == 0 || this.request.getMethod().equals ("HEAD")
 				|| statusCode == 204 || statusCode == 304
 				|| (100 <= statusCode && statusCode < 200))
 		{
-			this.data = dataOS.getByteArray();
-			headerLength = this.data.length;
+			/*
+			 * 4.3 Message Body: ...All responses to the HEAD request
+			 * method MUST NOT include a message-body, even though the
+			 * presence of entity-header fields might lead one to
+			 * believe they do. All 1xx (informational), 204 (no
+			 * content), and 304 (not modified) responses MUST NOT
+			 * include a message-body. All other responses do include a
+			 * message-body, although it MAY be of zero length.
+			 */
 		}
 		else if (contentLength > 0)
 		{
-			headerLength = dataOS.size();
-
 			for (int i = 0; i < contentLength; ++i)
 			{
-				inInt = in.read();
+				int inInt = in.read();
 
 				if (inInt == -1) break;
 
 				teeOS.write (inInt);
 			}
-
-			this.data = dataOS.getByteArray();
 		}
 		else // message-body contains zero or more chunks dataOS...
 		{
-			headerLength = dataOS.size();
-
 			if (!chunkedEncoding)
 			{
+				int inInt;
 				while ((inInt = in.read()) != -1)
 				{
 					teeOS.write (inInt);
@@ -203,6 +213,7 @@ public final class HTTPResponse
 					// chunk-dataOS CRLF
 					sb.setLength (0);
 
+					int inInt;
 					while ((inInt = in.read()) != -1)
 					{
 						teeOS.write (inInt);
@@ -237,9 +248,10 @@ public final class HTTPResponse
 				}
 				while (length > 0);
 			}
-
-			this.data = dataOS.getByteArray();
 		}
+
+		this.data = dataOS.getByteArray();
+		dataOS = null;
 	}
 
 	public byte[] getData() {return this.data;}
