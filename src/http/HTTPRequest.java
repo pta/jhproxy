@@ -97,7 +97,11 @@ public final class HTTPRequest
 					}
 					if (str.startsWith ("Host: "))
 					{
-						this.host = str.substring (6);
+						int p = str.indexOf (':', 6);
+						if (p > 0)
+							this.host = str.substring (6, p);
+						else
+							this.host = str.substring (6);
 					}
 					if (str.startsWith ("Content-Length: "))
 					{

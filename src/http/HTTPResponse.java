@@ -134,7 +134,7 @@ public final class HTTPResponse
 					}
 					else if (str.startsWith ("Content-Length: "))
 					{
-						contentLength = Integer.parseInt (str.substring (16));
+						contentLength = Integer.parseInt (str.substring (16).trim());
 					}
 					else if (str.startsWith ("Transfer-Encoding: chunked"))
 					{

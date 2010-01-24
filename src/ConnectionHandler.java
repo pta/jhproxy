@@ -94,8 +94,11 @@ public final class ConnectionHandler implements Runnable
 					}
 					finally
 					{
-						try {outSocket.close();} catch (IOException ioe) {}
-						outSocket = null;
+						if (outSocket != null)
+						{
+							try {outSocket.close();} catch (IOException ioe) {}
+							outSocket = null;
+						}
 					}
 				}
 			}
