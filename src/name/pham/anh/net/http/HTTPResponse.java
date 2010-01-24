@@ -37,11 +37,32 @@ public final class HTTPResponse
 
 	private Date	lastModified;
 
+	public static final byte[] FORBIDDENT_RESPONSE_DATA =
+			(
+				"HTTP/1.1 403 Forbidden\r\n" +
+				"Content-Length: 220\r\n" +
+				"Content-Type: text/html; charset=iso-8859-1\r\n\r\n" +
+				"<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +
+				"<html><head>\n" +
+				"<title>403 Forbidden</title>\n" +
+				"</head><body>\n" +
+				"<h1>Forbidden</h1>\n" +
+				"<p>This address is blocked by proxy server.</p>\n" +
+				"<hr>\n" +
+				"<address>JHProxy</address>\n" +
+				"</body></html>"
+			).getBytes();
+
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat ("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
 
 	public HTTPResponse (HTTPRequest request)
 	{
 		this.request = request;
+	}
+
+	public HTTPResponse (byte[] bytes)
+	{
+		data = bytes;
 	}
 
 	public void parse (InputStream in) throws IOException

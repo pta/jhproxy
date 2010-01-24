@@ -18,12 +18,12 @@ ContactName932
 </entry>
 
 <entry key="filter.url">
-.*\.us
-.*casino.*
+.*facebook\.com.*
+.*game.*
 ftp://.*
-.*://.*:13.*
+.*://.*:21.*
 .*/servlet/.*
-#.*\.php?.*
+#.*\.asp?.*
 </entry>
 
 <entry key="cache.default_duration">24h</entry>

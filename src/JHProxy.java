@@ -18,6 +18,7 @@
 
 import java.net.*;
 import java.io.*;
+import filter.*;
 
 import name.pham.anh.util.*;
 
@@ -33,6 +34,8 @@ public final class JHProxy
 
 	ServerSocket	listeningSocket;
 	int				listeningPort;
+
+	Filter			filter;
 
 	public JHProxy()
 	{
@@ -56,14 +59,13 @@ public final class JHProxy
 
 		listeningPort = propMain.getInt ("listening_port");
 
-		/*
-		urlFilter = new URLFilter();
-		urlFilter.load (propMain, "urlFilter.");
-		htmlFilter = new HTMLFilter();
-		htmlFilter.load (propMain, "htmlFilter.");
-		cacheManager = new CacheManager();
-		cacheManager.load(propMain,"cache.");
-		*/
+		loadSettings (propMain);
+	}
+
+	public void loadSettings (DataProperties prop)
+	{
+		String[] urlFilters = prop.getStringArray ("filter.url", null);
+		filter = new HTTPRequestFilter (urlFilters);
 	}
 
 	public void start()
