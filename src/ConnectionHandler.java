@@ -69,7 +69,7 @@ public final class ConnectionHandler implements Runnable
 			{
 				if (proxy.filter.blocks (request))
 				{
-					incOS.write (HTTPResponse.FORBIDDENT_RESPONSE_DATA);
+					incOS.write (HTTPResponse.FORBIDDENT_URL_RESPONSE);
 				}
 				else
 				{
@@ -135,7 +135,10 @@ public final class ConnectionHandler implements Runnable
 			try
 			{
 				HTTPResponse response = new HTTPResponse (request);
-				response.parse (outIS, incOS);
+
+				response.parseHead (outIS);
+				response.parseBody (outIS, incOS);
+
 				return response;
 			}
 			finally

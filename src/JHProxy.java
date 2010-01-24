@@ -72,6 +72,7 @@ public final class JHProxy
 		telnetPort = propMain.getInt ("telnet_port");
 
 		String[] urlFilters = propMain.getStringArray ("filter.url", null);
+
 		filter = new HTTPRequestFilter (urlFilters);
 
 		System.out.println ("done.");

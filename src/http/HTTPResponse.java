@@ -34,6 +34,7 @@ public final class HTTPResponse
 	private String	httpVersion;
 	private int		headerLength;
 	private String	contentType;
+	private String	charset = "utf-8";
 	private boolean	chunkedEncoding = false;
 	private int		contentLength = -1;
 
@@ -41,7 +42,7 @@ public final class HTTPResponse
 
 	private FreeByteArrayOutputStream dataOS;
 
-	public static final byte[] FORBIDDENT_RESPONSE_DATA =
+	public static final byte[] FORBIDDENT_URL_RESPONSE =
 			(
 				"HTTP/1.1 403 Forbidden\r\n" +
 				"Content-Length: 220\r\n" +
@@ -56,6 +57,22 @@ public final class HTTPResponse
 				"<address>JHProxy</address>\n" +
 				"</body></html>"
 			).getBytes();
+
+	public static final byte[] FORBIDDENT_TXT_RESPONSE =
+		(
+			"HTTP/1.1 403 Forbidden\r\n" +
+			"Content-Length: 220\r\n" +
+			"Content-Type: text/html; charset=iso-8859-1\r\n\r\n" +
+			"<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +
+			"<html><head>\n" +
+			"<title>403 Forbidden</title>\n" +
+			"</head><body>\n" +
+			"<h1>Forbidden</h1>\n" +
+			"<p>This content is blocked by proxy server.</p>\n" +
+			"<hr>\n" +
+			"<address>JHProxy</address>\n" +
+			"</body></html>"
+		).getBytes();
 
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat ("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
 
@@ -125,7 +142,26 @@ public final class HTTPResponse
 					}
 					else if (str.startsWith ("Content-Type: "))
 					{
-						contentType = str.substring (14);
+						int p = str.indexOf (';');
+
+						if (p > 0)
+						{
+							contentType = str.substring (14, p);
+
+							int s = str.indexOf ("charset=");
+
+							if (s > 0)
+							{
+								int e = str.indexOf (';', s + 8);
+
+								if (e > 0)
+									charset = str.substring (s + 8, e);
+								else
+									charset = str.substring (s + 8);
+							}
+						}
+						else
+							contentType = str.substring (14);
 					}
 					else if (str.startsWith ("Last-Modified: "))
 					{
@@ -156,6 +192,11 @@ public final class HTTPResponse
 		}
 
 		headerLength = dataOS.size();
+	}
+
+	public void parseBody (InputStream in) throws IOException
+	{
+		parseBody (in, null);
 	}
 
 	public void parseBody (InputStream in, OutputStream out) throws IOException
@@ -260,19 +301,23 @@ public final class HTTPResponse
 	public String getContentType() {return contentType;}
 	public String getHttpVersion () {return httpVersion;}
 
-	public String getContentText()
+	public boolean hasTextBody()
 	{
-		if (contentType.startsWith ("text/")
-				&& this.data.length > headerLength)
+		return (contentType != null && contentType.startsWith ("text/"));
+	}
+
+	public String getBodyText()
+	{
+		if (hasTextBody() && this.data.length > headerLength)
 		{
 			try
 			{
 				return new String (this.data, headerLength,
-						this.data.length - headerLength, "UTF-8");
+						this.data.length - headerLength, charset);
 			}
 			catch (UnsupportedEncodingException uee)
 			{
-				uee.printStackTrace();
+				System.out.println ("Unsupport content encoding: " + charset);
 			}
 		}
 

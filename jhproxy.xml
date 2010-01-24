@@ -13,9 +13,8 @@
 <entry key="target_proxy.port">8080</entry>
 -->
 
-<entry key="filter.html">
-Tên liên hệ
-ContactName932
+<entry key="filter.txt">
+MySQL
 </entry>
 
 <entry key="filter.url">
