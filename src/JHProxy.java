@@ -25,7 +25,6 @@ import name.pham.anh.util.*;
 public final class JHProxy
 {
 	DataProperties	propMain;
-	boolean			isRunning;
 
 	ThreadPool		threadPool = new ThreadPool();
 
@@ -139,6 +138,41 @@ public final class JHProxy
 	public int getTargetProxyPort()
 	{
 		return targetProxyPort;
+	}
+
+	public String getSettingsString()
+	{
+		StringBuilder sb = new StringBuilder();
+		if (targetProxyHost != null)
+		{
+			sb.append ("Target Proxy: ");
+			sb.append (targetProxyHost);
+			sb.append (':');
+			sb.append (targetProxyPort);
+			sb.append ('\n');
+		}
+		sb.append ("Listening Port: ");
+		sb.append (listeningPort);
+		sb.append ("\nTelnet Daemon Port: ");
+		sb.append (telnetPort);
+		sb.append ('\n');
+
+		String[] urlFilters = propMain.getStringArray ("filter.url", null);
+		int n = urlFilters.length;
+
+		if (urlFilters != null && n > 0)
+		{
+			sb.append ("\nURL Filters:\n");
+
+			for (int i = 0; i < n; ++i)
+			{
+				sb.append ("    ");
+				sb.append (urlFilters[i]);
+				sb.append ('\n');
+			}
+		}
+
+		return sb.toString();
 	}
 
 	public static void main (String[] args)

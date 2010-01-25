@@ -43,52 +43,66 @@ public class TelnetHandler extends Thread
 		try
 		{
 			Scanner scn = new Scanner (socket.getInputStream());
-			PrintStream ps = new PrintStream (socket.getOutputStream());
+			PrintStream ps = new PrintStream (socket.getOutputStream(), true);
 
 			ps.println ("JHProxy Telnet Service");
 
 			/*
 			ps.print ("Login: ");
-			ps.flush();
 			String login = scn.nextLine();
 			ps.print ("Password: ");
-			ps.flush();
 			String password = scn.nextLine();
 			*/
 
 			while (true)
 			{
 				ps.println ("\n\n   Main Menu\n");
-				ps.println ("11. Reload Settings");
-				ps.println ("12. Reset Proxy");
-				ps.println ("13. Exit");
-				ps.print (" -> ");
-				ps.flush();
+				ps.println ("1.  Status");
+				ps.println ("2.  Reload Settings");
+				ps.println ("3.  Reset Proxy");
+				ps.println ("0.  Exit");
 
-				int cmd = scn.nextInt();
-				ps.println();
-				ps.flush();
-
-				switch (cmd)
+				do
 				{
-					case 11:
+					ps.print (" -> ");
+
+					String cmd = scn.nextLine();
+					ps.println();
+
+					if (cmd.equals ("1"))
+					{
+						ps.println (proxy.getSettingsString());
+					}
+					else if (cmd.equals ("2"))
+					{
 						ps.print ("Reload settings.. ");
-						ps.flush();
 						proxy.loadSettings();
 						ps.println ("done.");
-						ps.flush();
-						break;
+					}
+					else if (cmd.equals("3"))
+					{
+						ps.print ("Reseting proxy? [y/n] ");
+						cmd = scn.nextLine();
+						ps.println();
 
-					case 12:
-						ps.println ("Reseting proxy..");
-						ps.flush();
-						proxy.close();
-						return;
-
-					case 13:
+						if (cmd.toLowerCase().startsWith("y"))
+						{
+							ps.println ("Reseting proxy..\n");
+							proxy.close();
+							return;
+						}
+						else
+							ps.println ("Reset canceled.");
+					}
+					else if (cmd.equals("0"))
+					{
 						ps.println ("Bye bye. Have a nice day!!!");
 						return;
+					}
+					else
+						continue;
 				}
+				while (false);
 			}
 		}
 		catch (NoSuchElementException nsee)
